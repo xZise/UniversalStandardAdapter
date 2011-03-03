@@ -1,0 +1,9 @@
+name: UniversalStandardAdapter
+version: 1.0.0
+main: de.xzise.usa.UniversalStandardAdapter
+authors:
+  - 'xZise'
+commands:
+  usa:
+    description: Universal Standard Adapter commands
+    usage: /<command> <name> - Show the registered plugin for the name.
