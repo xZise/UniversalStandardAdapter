@@ -1,10 +1,12 @@
 package de.xzise.usa.adapters;
 
+import org.bukkit.command.CommandSender;
+
 public interface PermissionDataAdapter extends PermissionAdapter {
 
-	int getPermissionInteger(String user, String name);
-	double getPermissionDouble(String user, String name);
-	String getPermissionString(String user, String name);
-	boolean getPermissionBoolean(String user, String name);
+	int getPermissionInteger(CommandSender user, String name);
+	double getPermissionDouble(CommandSender user, String name);
+	String getPermissionString(CommandSender user, String name);
+	boolean getPermissionBoolean(CommandSender user, String name);
 	
 }

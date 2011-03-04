@@ -6,4 +6,10 @@ public interface Adapter {
 
 	Plugin getPlugin();
 	
+	/**
+	 * Returns the name of the supported functionality.
+	 * @return
+	 */
+	String getName();
+	
 }
