@@ -10,9 +10,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import de.xzise.usa.adapters.Adapter;
-import de.xzise.usa.adapters.EconomyAdapter;
-import de.xzise.usa.adapters.PermissionAdapter;
-import de.xzise.usa.adapters.PermissionDataAdapter;
+import de.xzise.usa.adapters.economy.EconomyAdapter;
+import de.xzise.usa.adapters.permission.PermissionAdapter;
+import de.xzise.usa.adapters.permission.PermissionDataAdapter;
 
 public class UniveralStandardAdapter extends JavaPlugin {
 	

@@ -1,4 +1,4 @@
-package de.xzise.usa.adapters;
+package de.xzise.usa.adapters.permission;
 
 import org.bukkit.command.CommandSender;
 
