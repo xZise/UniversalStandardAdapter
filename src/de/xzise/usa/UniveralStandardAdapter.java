@@ -18,14 +18,30 @@ import de.xzise.usa.adapters.permission.PermissionDataAdapter;
 
 public class UniveralStandardAdapter extends JavaPlugin {
 	
-	private static final Map<String, Class<? extends Adapter>> ADAPTER_NAMES = new HashMap<String, Class<? extends Adapter>>();
-	
-	static {
-		// Register all names here
-		ADAPTER_NAMES.put("permissions-data", PermissionDataAdapter.class);
-		ADAPTER_NAMES.put("permissions", PermissionAdapter.class);
-		ADAPTER_NAMES.put("economy", EconomyAdapter.class);
+	private static class AdapterNames {
+		private final Map<String, Class<? extends Adapter>> names;
+		
+		public AdapterNames() {
+			this.names = new HashMap<String, Class<? extends Adapter>>();
+			this.names.put("permissions-data", PermissionDataAdapter.class);
+			this.names.put("permissions", PermissionAdapter.class);
+			this.names.put("economy", EconomyAdapter.class);
+		}
+		
+		public Class<? extends Adapter> get(String name) {
+			return this.names.get(name);
+		}
+		
+		public boolean containsKey(String name) {
+			return this.names.containsKey(name);
+		}
+		
+		public boolean containsValue(Class<? extends Adapter> adapterClass) {
+			return this.names.containsValue(adapterClass);
+		}
 	}
+	
+	private static final AdapterNames ADAPTER_NAMES = new AdapterNames();
 	
 	private final Map<Class<? extends Adapter>, Adapter> adapters = new HashMap<Class<? extends Adapter>, Adapter>();
 	private final Map<Class<? extends Adapter>, List<AdapterListener>> listeners = new HashMap<Class<? extends Adapter>, List<AdapterListener>>();
