@@ -19,15 +19,12 @@ import de.xzise.usa.adapters.permission.PermissionDataAdapter;
 public class UniveralStandardAdapter extends JavaPlugin {
 	
 	private static final Map<String, Class<? extends Adapter>> ADAPTER_NAMES = new HashMap<String, Class<? extends Adapter>>();
-	private static final Map<Class<? extends Adapter>, Class<? extends Adapter>> ADAPTER_BASE_CLASSES = new HashMap<Class<? extends Adapter>, Class<? extends Adapter>>();
 	
 	static {
 		// Register all names here
+		ADAPTER_NAMES.put("permissions-data", PermissionDataAdapter.class);
 		ADAPTER_NAMES.put("permissions", PermissionAdapter.class);
 		ADAPTER_NAMES.put("economy", EconomyAdapter.class);
-		
-		// Register all base classes here
-		ADAPTER_BASE_CLASSES.put(PermissionDataAdapter.class, PermissionAdapter.class);
 	}
 	
 	private final Map<Class<? extends Adapter>, Adapter> adapters = new HashMap<Class<? extends Adapter>, Adapter>();
@@ -62,30 +59,13 @@ public class UniveralStandardAdapter extends JavaPlugin {
 	}
 	
 	/**
-	 * Returns the base class for an adapter.
-	 * @param adapterClass The adapter class.
-	 * @return The base class of the adapter. If no baseclass exists it return the adapter class.
-	 */
-	private Class<? extends Adapter> getBaseClass(Class<? extends Adapter> adapterClass) {
-		Class<? extends Adapter> baseClass = ADAPTER_BASE_CLASSES.get(adapterClass);
-		if (baseClass == null) {
-			baseClass = adapterClass;
-		}
-		return baseClass;
-	}
-	
-	/**
 	 * Shows a warning if no name for the base class exists.
 	 * @param realClass The class of the adapter.
 	 * @param baseClass The base class of the adapter.
 	 */
-	private void showErrorWarning(Class<? extends Adapter> realClass, Class<? extends Adapter> baseClass) {
-		if (!ADAPTER_NAMES.containsValue(baseClass)) {
-			String baseClassName = "";
-			if (!realClass.equals(baseClass)) {
-				baseClassName = " (Baseclass: " + baseClass.getName() + ")";
-			}
-			Logger.getLogger("Minecraft").warning("[" + this.getDescription().getName() + "] Register an adapter without a name: " + realClass.getName() + baseClassName);
+	private void showErrorWarning(Class<? extends Adapter> realClass) {
+		if (!ADAPTER_NAMES.containsValue(realClass)) {
+			Logger.getLogger("Minecraft").warning("[" + this.getDescription().getName() + "] Register an adapter without a name: " + realClass.getName());
 		}
 	}
 	
@@ -94,15 +74,12 @@ public class UniveralStandardAdapter extends JavaPlugin {
 	 * @param adapter New adapter.
 	 * @return If an adapter for this type was already registered.
 	 */
-	public boolean registerAdapter(Adapter adapter) {
-		Class<? extends Adapter> baseClass = this.getBaseClass(adapter.getClass());
-		
-		this.showErrorWarning(adapter.getClass(), baseClass);
-		
-		Adapter a = this.adapters.get(baseClass);
+	public boolean registerAdapter(Adapter adapter) {		
+		this.showErrorWarning(adapter.getClass());
+		Adapter a = this.adapters.get(adapter.getClass());
 		if (a == null) {
-			this.adapters.put(baseClass, adapter);
-			List<AdapterListener> adapterListeners = this.listeners.get(baseClass);
+			this.adapters.put(adapter.getClass(), adapter);
+			List<AdapterListener> adapterListeners = this.listeners.get(adapter.getClass());
 			if (adapterListeners != null) {
 				for (AdapterListener adapterListener : adapterListeners) {
 					adapterListener.onRegister(adapter);
@@ -115,12 +92,10 @@ public class UniveralStandardAdapter extends JavaPlugin {
 	}
 	
 	public void unregisterAdapter(Adapter adapter) {
-		Class<? extends Adapter> baseClass = this.getBaseClass(adapter.getClass());
-		
-		Adapter old = this.adapters.get(baseClass);
+		Adapter old = this.adapters.get(adapter.getClass());
 		if (old == adapter) {
-			this.adapters.remove(baseClass);
-			List<AdapterListener> adapterListeners = this.listeners.get(baseClass);
+			this.adapters.remove(adapter.getClass());
+			List<AdapterListener> adapterListeners = this.listeners.get(adapter.getClass());
 			if (adapterListeners != null) {
 				for (AdapterListener adapterListener : adapterListeners) {
 					adapterListener.onUnregister(adapter);
@@ -134,14 +109,13 @@ public class UniveralStandardAdapter extends JavaPlugin {
 	}
 	
 	public void registerAdapterListener(AdapterListener listener) {
-		Class<? extends Adapter> baseClass = this.getBaseClass(listener.getAdapterClass());
-		List<AdapterListener> adapterListeners = this.listeners.get(baseClass);
+		List<AdapterListener> adapterListeners = this.listeners.get(listener.getAdapterClass());
 		if (adapterListeners == null) {
 			adapterListeners = new ArrayList<AdapterListener>();
-			this.listeners.put(baseClass, adapterListeners);
+			this.listeners.put(listener.getAdapterClass(), adapterListeners);
 		}
 		adapterListeners.add(listener);
-		Adapter adapter = this.adapters.get(baseClass);
+		Adapter adapter = this.adapters.get(listener.getAdapterClass());
 		if (adapter != null) {
 			listener.onRegister(adapter);
 		}
@@ -168,7 +142,7 @@ public class UniveralStandardAdapter extends JavaPlugin {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T extends Adapter> T getAdapter(Class<T> adapterClass) {
-		Adapter a = this.adapters.get(this.getBaseClass(adapterClass));
+		Adapter a = this.adapters.get(adapterClass);
 		if (adapterClass.getClass().isAssignableFrom(a.getClass())) {
 			return (T) a;
 		} else {
