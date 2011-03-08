@@ -20,6 +20,7 @@ import de.xzise.usa.adapters.Adapter;
 import de.xzise.usa.adapters.economy.EconomyAdapter;
 import de.xzise.usa.adapters.permission.PermissionAdapter;
 import de.xzise.usa.adapters.permission.PermissionDataAdapter;
+import de.xzise.usa.passive.AdapterOwner;
 
 public class UniveralStandardAdapter extends JavaPlugin {
 	
@@ -66,10 +67,21 @@ public class UniveralStandardAdapter extends JavaPlugin {
 	}
 	
 	private void checkPassiveActions(Plugin plugin) {
-		if (plugin.isEnabled()) {
-			
-		} else {
-			
+		if (plugin instanceof AdapterOwner) {
+			if (plugin.isEnabled()) {
+				// Register all adapters this plugin owns.
+				for (Adapter adapter : ((AdapterOwner) plugin).getAdapters()) {
+					this.registerAdapter(adapter);
+				}
+			} else {
+				// Unregister all adapters of this plugin.
+				//TODO: Maybe make this smoother?
+				for (Adapter adapter : this.adapters.values()) {
+					if (adapter.getPlugin() == plugin) {
+						this.unregisterAdapter(adapter);
+					}
+				}
+			}
 		}
 	}
 	
