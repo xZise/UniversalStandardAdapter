@@ -9,6 +9,11 @@ import java.util.logging.Logger;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.event.Event.Priority;
+import org.bukkit.event.Event.Type;
+import org.bukkit.event.server.PluginEvent;
+import org.bukkit.event.server.ServerListener;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import de.xzise.usa.adapters.Adapter;
@@ -37,7 +42,35 @@ public class UniveralStandardAdapter extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
+		// Check all plugins
+		for (Plugin plugin : this.getServer().getPluginManager().getPlugins()) {
+			this.checkPassiveActions(plugin);
+		}
+		
+		ServerListener listener = new ServerListener() {
+			@Override
+			public void onPluginEnabled(PluginEvent event) {
+				UniveralStandardAdapter.this.checkPassiveActions(event.getPlugin());
+		    }
+
+			@Override
+		    public void onPluginDisabled(PluginEvent event) {
+				UniveralStandardAdapter.this.checkPassiveActions(event.getPlugin());				
+		    }
+		};
+		
+		this.getServer().getPluginManager().registerEvent(Type.PLUGIN_ENABLE, listener, Priority.Normal, this);
+		this.getServer().getPluginManager().registerEvent(Type.PLUGIN_DISABLE, listener, Priority.Normal, this);
+		
 		Logger.getLogger("Minecraft").info(this.getDescription().getName() + " enabled (Version: " + this.getDescription().getVersion() + ").");
+	}
+	
+	private void checkPassiveActions(Plugin plugin) {
+		if (plugin.isEnabled()) {
+			
+		} else {
+			
+		}
 	}
 	
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
