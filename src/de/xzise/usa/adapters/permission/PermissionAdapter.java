@@ -6,6 +6,6 @@ public interface PermissionAdapter extends Adapter {
 
 	boolean hasPermission(String user, String world, String name);
 	
-	String getGroup(String name);
+	String[] getGroups(String user, String world);
 	
 }
