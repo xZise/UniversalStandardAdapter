@@ -2,6 +2,7 @@ package de.xzise.usa;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -21,6 +22,7 @@ import de.xzise.usa.adapters.economy.EconomyAdapter;
 import de.xzise.usa.adapters.permission.PermissionAdapter;
 import de.xzise.usa.adapters.permission.PermissionDataAdapter;
 import de.xzise.usa.passive.AdapterOwner;
+import de.xzise.usa.passive.AdapterUser;
 
 public class UniveralStandardAdapter extends JavaPlugin {
 	
@@ -66,20 +68,64 @@ public class UniveralStandardAdapter extends JavaPlugin {
 		Logger.getLogger("Minecraft").info(this.getDescription().getName() + " enabled (Version: " + this.getDescription().getVersion() + ").");
 	}
 	
+	private class AdapterUserListener implements AdapterListener {
+
+		private final Class<? extends Adapter> adapterClass;
+		private final AdapterUser user;
+		
+		public AdapterUserListener(Class<? extends Adapter> adapterClass, AdapterUser user) {
+			this.adapterClass = adapterClass;
+			this.user = user;
+		}
+		
+		public AdapterUser getUser() {
+			return this.user;
+		}
+		
+		@Override
+		public Class<? extends Adapter> getAdapterClass() {
+			return this.adapterClass;
+		}
+
+		@Override
+		public void onRegister(Adapter adapter) {
+			this.user.adapterRegistered(adapter);
+		}
+
+		@Override
+		public void onUnregister(Adapter adapter) {
+			this.user.adapterUnregistered(adapter);
+		}		
+	}
+	
 	private void checkPassiveActions(Plugin plugin) {
-		if (plugin instanceof AdapterOwner) {
-			if (plugin.isEnabled()) {
+		if (plugin.isEnabled()) {
+			if (plugin instanceof AdapterOwner) {
 				// Register all adapters this plugin owns.
 				for (Adapter adapter : ((AdapterOwner) plugin).getAdapters()) {
 					this.registerAdapter(adapter);
 				}
-			} else {
+			}
+			
+			if (plugin instanceof AdapterUser) {
+				for (Class<? extends Adapter> clazz : ((AdapterUser) plugin).getAdapters()) {
+					this.registerAdapterListener(new AdapterUserListener(clazz, (AdapterUser) plugin));
+				}
+			}
+		} else {
+			if (plugin instanceof AdapterOwner) {
 				// Unregister all adapters of this plugin.
 				//TODO: Maybe make this smoother?
 				for (Adapter adapter : this.adapters.values()) {
 					if (adapter.getPlugin() == plugin) {
 						this.unregisterAdapter(adapter);
 					}
+				}	
+			}
+			
+			if (plugin instanceof AdapterUser) {
+				for (Class<? extends Adapter> clazz : ((AdapterUser) plugin).getAdapters()) {
+					unregisterAdapterListener(plugin, clazz);
 				}
 			}
 		}
@@ -163,6 +209,26 @@ public class UniveralStandardAdapter extends JavaPlugin {
 		Adapter adapter = this.adapters.get(listener.getAdapterClass());
 		if (adapter != null) {
 			listener.onRegister(adapter);
+		}
+	}
+	
+	public void unregisterAdapterListener(AdapterListener listener) {
+		List<AdapterListener> adapterListeners = this.listeners.get(listener.getAdapterClass());
+		if (adapterListeners != null) {
+			adapterListeners.remove(listener);
+		}
+	}
+
+	public void unregisterAdapterListener(Plugin plugin, Class<? extends Adapter> clazz) {
+		List<AdapterListener> adapterListeners = this.listeners.get(clazz);
+		if (adapterListeners != null) {
+			List<AdapterListener> pluginListeners = new LinkedList<AdapterListener>();
+			for (AdapterListener adapterListener : adapterListeners) {
+				if (adapterListener instanceof AdapterUserListener && ((AdapterUserListener) adapterListener).getUser() == plugin) {
+					pluginListeners.add(adapterListener);
+				}
+			}
+			adapterListeners.removeAll(pluginListeners);
 		}
 	}
 	
