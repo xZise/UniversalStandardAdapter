@@ -160,17 +160,38 @@ public class UniveralStandardAdapter extends JavaPlugin {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
+	private List<Class<? extends Adapter>> getAdapterInterfaces(Adapter adapter) {
+		List<Class<? extends Adapter>> result = new LinkedList<Class<? extends Adapter>>();
+		Class<?>[] interfaces = adapter.getClass().getInterfaces();
+		for (Class<?> clazz : interfaces) {
+			if (Adapter.class.isInstance(clazz)) {
+				result.add((Class<? extends Adapter>) clazz);
+			}
+		}
+		return result;
+	}
+	
 	/**
 	 * Registers an adapter. Returns false if an adapter is already registered.
 	 * @param adapter New adapter.
 	 * @return If an adapter for this type was already registered.
 	 */
 	public boolean registerAdapter(Adapter adapter) {		
-		this.showErrorWarning(adapter.getClass());
-		Adapter a = this.adapters.get(adapter.getClass());
+		boolean result = true;
+		List<Class<? extends Adapter>> interfaces = this.getAdapterInterfaces(adapter);
+		for (Class<? extends Adapter> clazz : interfaces) {
+			result = result && this.registerAdapter(adapter, (Class<? extends Adapter>) clazz);
+		}
+		return result;
+	}
+	
+	private boolean registerAdapter(Adapter adapter, Class<? extends Adapter> adapterClass) {
+		this.showErrorWarning(adapterClass);
+		Adapter a = this.adapters.get(adapterClass);
 		if (a == null) {
-			this.adapters.put(adapter.getClass(), adapter);
-			List<AdapterListener> adapterListeners = this.listeners.get(adapter.getClass());
+			this.adapters.put(adapterClass, adapter);
+			List<AdapterListener> adapterListeners = this.listeners.get(adapterClass);
 			if (adapterListeners != null) {
 				for (AdapterListener adapterListener : adapterListeners) {
 					adapterListener.onRegister(adapter);
@@ -183,10 +204,17 @@ public class UniveralStandardAdapter extends JavaPlugin {
 	}
 	
 	public void unregisterAdapter(Adapter adapter) {
-		Adapter old = this.adapters.get(adapter.getClass());
+		List<Class<? extends Adapter>> interfaces = this.getAdapterInterfaces(adapter);
+		for (Class<? extends Adapter> clazz : interfaces) {
+			this.unregisterAdapter(adapter, clazz);
+		}
+	}
+	
+	private void unregisterAdapter(Adapter adapter, Class<? extends Adapter> adapterClass) {
+		Adapter old = this.adapters.get(adapterClass);
 		if (old == adapter) {
-			this.adapters.remove(adapter.getClass());
-			List<AdapterListener> adapterListeners = this.listeners.get(adapter.getClass());
+			this.adapters.remove(adapterClass);
+			List<AdapterListener> adapterListeners = this.listeners.get(adapterClass);
 			if (adapterListeners != null) {
 				for (AdapterListener adapterListener : adapterListeners) {
 					adapterListener.onUnregister(adapter);
@@ -254,7 +282,7 @@ public class UniveralStandardAdapter extends JavaPlugin {
 	@SuppressWarnings("unchecked")
 	public <T extends Adapter> T getAdapter(Class<T> adapterClass) {
 		Adapter a = this.adapters.get(adapterClass);
-		if (adapterClass.getClass().isAssignableFrom(a.getClass())) {
+		if (adapterClass.isInstance(a)) {
 			return (T) a;
 		} else {
 			return null;
